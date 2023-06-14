@@ -29,6 +29,30 @@ int main(int argc, char **argv)
 
     float length = sqrt(point.x * point.x + point.y * point.y);
 
+    // conditionals
+    if (count > 10 && count < 200)
+    {
+        puts("x is juuuuuuuust right.....");
+    }
+    else
+    {
+        puts("x is out of the proper range! oh no!");
+    }
+
+    // loops
+
+    int i = 10;
+    while (i > 0)
+    {
+        puts("while loop iteration...");
+        i = i - 1;
+    }
+
+    for (int j = 0; j < 10; j++)
+    {
+        puts("for loop iteration...");
+    }
+
     puts("Hello, world!");
     return 0;
 }
