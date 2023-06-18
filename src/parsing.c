@@ -39,11 +39,31 @@ void lispy_greeting()
     puts("Press Ctrl+c to Exit\n");
 }
 
+// recursive number of nodes function
+int number_of_nodes(mpc_ast_t *t)
+{
+    // base case
+    if (t->children_num == 0)
+    {
+        return 1;
+    }
+
+    // recursive case
+    if (t->children_num >= 1)
+    {
+        int total = 1;
+        for (int i = 0; i < t->children_num; i++)
+        {
+            total = total + number_of_nodes(t->children[i]);
+        }
+        return total;
+    }
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
-
-    // TODO: functionize this?
-
     // define parsers
     mpc_parser_t *Number = mpc_new("number");
     mpc_parser_t *Operator = mpc_new("operator");
@@ -77,9 +97,21 @@ int main(int argc, char **argv)
         mpc_result_t result;
         if (mpc_parse("<stdin>", input, Lispy, &result))
         {
-            // on success, print AST (what is that??)
+            // on success, print AST (abstract syntax tree)
             mpc_ast_print(result.output);
             mpc_ast_delete(result.output);
+
+            // load ast from output
+            mpc_ast_t *a = result.output;
+            printf("Tag: %s\n", a->tag);
+            printf("Contents: %s\n", a->contents);
+            printf("Number of Children: %i\n", a->children_num);
+
+            // get first child - naive way and doesnt search every node in the tree
+            mpc_ast_t *c0 = a->children[0];
+            printf("Tag: %s\n", c0->tag);
+            printf("Contents: %s\n", c0->contents);
+            printf("Number of Children: %i\n", c0->children_num);
         }
         else
         {
