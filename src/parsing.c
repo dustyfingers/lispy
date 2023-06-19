@@ -56,6 +56,57 @@ enum
     LERR_BAD_NUM
 };
 
+// construct a new number type lval
+
+lval lval_num(long x)
+{
+    lval v;
+    v.type = LVAL_NUM;
+    v.num = x;
+    return v;
+}
+
+// construct a new error type lval
+lval lval_err(int x)
+{
+    lval v;
+    v.type = LVAL_ERR;
+    v.err = x;
+    return v;
+}
+
+// print an 'lval'
+void lval_print(lval value)
+{
+    switch (value.type)
+    {
+    case LVAL_NUM:
+        printf("%li", value.num);
+        break;
+
+    case LVAL_ERR:
+        if (value.err == LERR_DIV_ZERO)
+        {
+            printf("Error: Division by Zero!");
+        }
+        if (value.err == LERR_BAD_OP)
+        {
+            printf("Error: Invalid Operator!");
+        }
+        if (value.err == LERR_BAD_NUM)
+        {
+            printf("Error: Invalid Number!");
+        }
+        break;
+    }
+}
+
+void lval_println(lval value)
+{
+    lval_print(value);
+    putchar('\n');
+};
+
 // print version and exit information
 void lispy_greeting()
 {
@@ -88,42 +139,58 @@ int number_of_nodes(mpc_ast_t *t)
 }
 
 // operator evaluator
-long eval_op(long x, char *op, long y)
+lval eval_op(lval x, char *op, lval y)
 {
+
+    // if either operator has an error type, return it
+    if (x.type == LVAL_ERR)
+    {
+        return x;
+    }
+    if (y.type == LVAL_ERR)
+    {
+        return y;
+    }
+
+    // otherwise evaluate as a valid operator
     if (strcmp(op, "+") == 0)
     {
-        return x + y;
+        return lval_num(x.num + y.num);
     }
     if (strcmp(op, "-") == 0)
     {
-        return x - y;
+        return lval_num(x.num - y.num);
     }
     if (strcmp(op, "*") == 0)
     {
-        return x * y;
+        return lval_num(x.num * y.num);
     }
     if (strcmp(op, "/") == 0)
     {
-        return x / y;
+        return y.num == 0 ? lval_err(LERR_DIV_ZERO) : lval_num(x.num / y.num);
     }
-    return 0;
+    return lval_err(LERR_BAD_OP);
 }
 
 // recursive evaluation function
-long eval(mpc_ast_t *t)
+lval eval(mpc_ast_t *t)
 {
     // if tagged as a number, this node has no children, we can return it directly
     // base case
     if (strstr(t->tag, "number"))
     {
-        return atoi(t->contents);
+        // check for conversion error
+        errno = 0;
+        long x = strtol(t->contents, NULL, 10);
+
+        return errno != ERANGE ? lval_num(x) : lval_err(LERR_BAD_NUM);
     }
 
     // operator is always second child
     char *operator= t->children[1]->contents;
 
     // store third child in x
-    long x = eval(t->children[2]);
+    lval x = eval(t->children[2]);
 
     // iterate the remaining children and combine
     int i = 3;
@@ -172,8 +239,8 @@ int main(int argc, char **argv)
         if (mpc_parse("<stdin>", input, Lispy, &parse_result))
         {
             // on success, print AST (abstract syntax tree) after parse
-            long eval_result = eval(parse_result.output);
-            printf("%li\n", eval_result);
+            lval eval_result = eval(parse_result.output);
+            lval_println(eval_result);
             mpc_ast_delete(parse_result.output);
         }
         else
