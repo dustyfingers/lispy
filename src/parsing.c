@@ -62,6 +62,55 @@ int number_of_nodes(mpc_ast_t *t)
     return 0;
 }
 
+// operator evaluator
+long eval_op(long x, char *op, long y)
+{
+    if (strcmp(op, "+") == 0)
+    {
+        return x + y;
+    }
+    if (strcmp(op, "-") == 0)
+    {
+        return x - y;
+    }
+    if (strcmp(op, "*") == 0)
+    {
+        return x * y;
+    }
+    if (strcmp(op, "/") == 0)
+    {
+        return x / y;
+    }
+    return 0;
+}
+
+// recursive evaluation function
+long eval(mpc_ast_t *t)
+{
+    // if tagged as a number, this node has no children, we can return it directly
+    // base case
+    if (strstr(t->tag, "number"))
+    {
+        return atoi(t->contents);
+    }
+
+    // operator is always second child
+    char *operator= t->children[1]->contents;
+
+    // store third child in x
+    long x = eval(t->children[2]);
+
+    // iterate the remaining children and combine
+    int i = 3;
+    while (strstr(t->children[i]->tag, "expr"))
+    {
+        x = eval_op(x, operator, eval(t->children[i]));
+        i++;
+    }
+
+    return x;
+}
+
 int main(int argc, char **argv)
 {
     // define parsers
@@ -94,24 +143,13 @@ int main(int argc, char **argv)
         add_history(input);
 
         // parse input using mpc parsers
-        mpc_result_t result;
-        if (mpc_parse("<stdin>", input, Lispy, &result))
+        mpc_result_t parse_result;
+        if (mpc_parse("<stdin>", input, Lispy, &parse_result))
         {
-            // on success, print AST (abstract syntax tree)
+            // on success, print AST (abstract syntax tree) after parse
+            long result = eval(parse_result.output);
             mpc_ast_print(result.output);
             mpc_ast_delete(result.output);
-
-            // load ast from output
-            mpc_ast_t *a = result.output;
-            printf("Tag: %s\n", a->tag);
-            printf("Contents: %s\n", a->contents);
-            printf("Number of Children: %i\n", a->children_num);
-
-            // get first child - naive way and doesnt search every node in the tree
-            mpc_ast_t *c0 = a->children[0];
-            printf("Tag: %s\n", c0->tag);
-            printf("Contents: %s\n", c0->contents);
-            printf("Number of Children: %i\n", c0->children_num);
         }
         else
         {
