@@ -147,15 +147,15 @@ int main(int argc, char **argv)
         if (mpc_parse("<stdin>", input, Lispy, &parse_result))
         {
             // on success, print AST (abstract syntax tree) after parse
-            long result = eval(parse_result.output);
-            mpc_ast_print(result.output);
-            mpc_ast_delete(result.output);
+            long eval_result = eval(parse_result.output);
+            printf("%li\n", eval_result);
+            mpc_ast_delete(parse_result.output);
         }
         else
         {
             // otherwise, handle error
-            mpc_err_print(result.error);
-            mpc_err_delete(result.error);
+            mpc_err_print(parse_result.error);
+            mpc_err_delete(parse_result.error);
         }
 
         free(input);
