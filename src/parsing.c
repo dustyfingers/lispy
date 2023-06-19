@@ -31,6 +31,31 @@ void add_history(char *unused) {}
 #include <editline/history.h>
 #endif
 
+// Lispy Value struct
+// expressions can evaluate to either values or errors
+// this concept is encapsulated in the 'lispy value'
+typedef struct
+{
+    int type;
+    long num;
+    int err;
+} lval;
+
+// possible lval types
+enum
+{
+    LVAL_NUM,
+    LVAL_ERR
+};
+
+// possible lval error types
+enum
+{
+    LERR_DIV_ZERO,
+    LERR_BAD_OP,
+    LERR_BAD_NUM
+};
+
 // print version and exit information
 void lispy_greeting()
 {
